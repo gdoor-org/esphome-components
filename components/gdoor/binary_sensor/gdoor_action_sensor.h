@@ -20,6 +20,8 @@ class GDoorActionSensor : public binary_sensor::BinarySensor, public Component {
   GdoorComponent *parent_{nullptr};
   std::vector<std::string> busdata_list_;
   uint32_t last_bus_update_{0};
+  uint32_t last_trigger_time_ = 0;
+  bool pending_false_ = false;
 };
 
 }  // namespace gdoor_esphome

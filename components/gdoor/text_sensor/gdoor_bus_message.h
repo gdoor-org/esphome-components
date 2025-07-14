@@ -17,6 +17,8 @@ class GDoorBusMessage : public text_sensor::TextSensor, public Component {
  protected:
   GdoorComponent *parent_{nullptr};
   uint32_t last_bus_update_{0};
+  uint32_t last_publish_time_{0};
+  bool pending_idle_ = false;
 };
 
 }  // namespace gdoor_esphome

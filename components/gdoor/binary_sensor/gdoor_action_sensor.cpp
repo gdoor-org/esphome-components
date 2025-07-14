@@ -15,6 +15,7 @@ void GDoorActionSensor::setup() {
 }
 
 void GDoorActionSensor::loop() {
+  const uint32_t now = millis();
   if (this->parent_ != nullptr) {
     uint32_t parent_timestamp = this->parent_->get_last_bus_update();
     if (parent_timestamp != this->last_bus_update_) {
@@ -24,13 +25,19 @@ void GDoorActionSensor::loop() {
         if (current_message.find(busdata) != std::string::npos) {
           ESP_LOGVV(TAG, "Matched busdata: %s", busdata.c_str());
           this->publish_state(true);
-          this->publish_state(false);
+          this->last_trigger_time_ = now;  // remember when we triggered
+          this->pending_false_ = true;     // flag to later publish false
           return;
         }
       }
     }
   } else {
     ESP_LOGW(TAG, "Parent component not set!");
+  }
+  // Non-blocking delayed 'false'
+  if (this->pending_false_ && now - this->last_trigger_time_ >= 500) {
+    this->publish_state(false);
+    this->pending_false_ = false;
   }
 }
 
