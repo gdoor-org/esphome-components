@@ -10,8 +10,7 @@ DEPENDENCIES = [DOMAIN]
 # Define the text sensor class for gdoor
 GDoorActionSensor = gdoor_esphome_ns.class_("GDoorActionSensor", binary_sensor.BinarySensor, cg.Component)
 
-CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend({
-    cv.GenerateID(): cv.declare_id(GDoorActionSensor),
+CONFIG_SCHEMA = binary_sensor.binary_sensor_schema(GDoorActionSensor).extend({
     cv.Required(CONF_NAME): cv.string,
     cv.Required("gdoor_id"): cv.use_id(GdoorComponent),
     cv.Optional("busdata", default=[]): cv.ensure_list(cv.string),
