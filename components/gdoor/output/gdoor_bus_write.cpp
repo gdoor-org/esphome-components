@@ -18,12 +18,18 @@ void GDoorBusWrite::write_state(bool state) {
   ESP_LOGV(TAG, "Writing state: ON");
   ESP_LOGD(TAG, "  Sending payload: %s", this->payload_.c_str());
   this->parent_->send_bus_message(this->payload_);
+  if (this->tx_event_ != nullptr) {
+    this->tx_event_->handle_tx(this->tx_event_type_);
+  }
 }
 
 void GDoorBusWrite::dump_config() {
   ESP_LOGCONFIG(TAG, "GDoor Bus Writer:");
   ESP_LOGCONFIG(TAG, "  Payload: %s", this->payload_.c_str());
   ESP_LOGCONFIG(TAG, "  Require Response: %s", this->require_response_ ? "YES" : "NO");
+  if (this->tx_event_ != nullptr) {
+    ESP_LOGCONFIG(TAG, "  TX Event type: %s", this->tx_event_type_.c_str());
+  }
 }
 
 }  // namespace gdoor_esphome

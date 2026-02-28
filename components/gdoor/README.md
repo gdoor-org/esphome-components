@@ -15,7 +15,7 @@ esp32:
 external_components:
   - source:
       type: git
-      url: https://github.com/gdoor-org/esphome-components
+      url: https://github.com/dtill/esphome-components
     components: [gdoor]
     refresh: 0s
 
@@ -86,4 +86,109 @@ light:
       ignore_strapping_warning: true        # https://github.com/esphome/feature-requests/issues/2168
     id: blue_status_light
     internal: true
+```
+
+## Event Entities
+
+In addition to `binary_sensor`, this component supports the ESPHome [`event`](https://esphome.io/components/event/index.html) platform. Events are stateless triggers that appear in Home Assistant as **event entities**. Unlike a binary sensor (which has an ON/OFF state that resets after 500 ms), an event entity fires once and carries an `event_type` string that automations can use to distinguish between different bus messages.
+
+### Why use events instead of (or alongside) binary_sensor?
+
+| Feature | `binary_sensor` | `event` |
+|---|---|---|
+| HA state (on/off) | Yes — auto-resets after 500 ms | No — stateless trigger |
+| `event_type` field | No | Yes — distinguish short/long ring, etc. |
+| HA Blueprints / doorbell intent | Limited | Full support (`device_class: doorbell`) |
+| Mobile push notifications | Manual | Native doorbell notification in HA app |
+| Voice assistant integration | No | Yes (doorbell device class) |
+
+**Recommendation:** use both — a `binary_sensor` for simple `on_value` automations and an `event` entity for HA dashboards, blueprints, and mobile notifications.
+
+### `device_class`
+
+- `doorbell` — use for door-ring button events. Enables native HA doorbell behaviour (push notifications, blueprints, voice assistants).
+- `button` — use for all other bus-triggered button events (indoor light button, opener confirmation, etc.).
+
+### YAML Configuration
+
+The `busdata` key is a **dict** where each key is an `event_type` name (you choose the name freely), and the value is a list of one or more validated hex frame strings. When a matching frame arrives on the bus, the event fires with the corresponding `event_type`.
+
+```yaml
+event:
+  # Doorbell ring event — distinguishes short and long ring
+  - platform: gdoor
+    id: gdoor_ring_event
+    name: "GDoor Ring"
+    device_class: doorbell
+    gdoor_id: my_gdoor
+    busdata:
+      ring_short:
+        - "011011A286FD0360A04A"   # short BUTTON_RING on OUTDOOR station
+      ring_long:
+        - "011011A286FD03A0A08A"   # long BUTTON_RING on OUTDOOR station
+
+  # Indoor light button event
+  - platform: gdoor
+    id: gdoor_light_event
+    name: "GDoor Light Button"
+    device_class: button
+    gdoor_id: my_gdoor
+    busdata:
+      press:
+        - "011041A286FD0000A18FA7" # BUTTON_LIGHT from INDOOR station
+
+  # TX-linked event: fires when the output sends the DOOR_OPEN payload.
+  # No busdata needed — RX is disabled while transmitting, so we fire from TX side.
+  - platform: gdoor
+    id: gdoor_opener_event
+    name: "GDoor Opener"
+    device_class: button
+    gdoor_id: my_gdoor
+    event_types:
+      - press                       # explicit list required when no busdata is provided
+
+output:
+  - platform: gdoor
+    id: gdoor_outdoor_opener
+    name: "GDoor Outdoor Opener"
+    gdoor_id: my_gdoor
+    payload: "0200311234560000A165432139"   # example DOOR_OPEN to OUTDOOR station
+    tx_event_id: gdoor_opener_event         # optional: fire this event when output triggers
+    tx_event_type: press                    # optional: event_type to fire (default: "press")
+```
+
+### Using events in ESPHome automations
+
+```yaml
+event:
+  - platform: gdoor
+    id: gdoor_ring_event
+    name: "GDoor Ring"
+    device_class: doorbell
+    gdoor_id: my_gdoor
+    busdata:
+      ring_short:
+        - "011011A286FD0360A04A"
+      ring_long:
+        - "011011A286FD03A0A08A"
+    on_event:
+      then:
+        - if:
+            condition:
+              lambda: 'return x == "ring_short";'
+            then:
+              - light.turn_on: blue_status_light
+              - delay: 500ms
+              - light.turn_off: blue_status_light
+```
+
+In Home Assistant, the event entity appears under **Settings → Devices & Services** and can be used as a trigger in automations:
+
+```yaml
+# Home Assistant automation trigger
+trigger:
+  - platform: state
+    entity_id: event.gdoor_ring
+    attribute: event_type
+    to: ring_short
 ```

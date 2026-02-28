@@ -2,7 +2,9 @@
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include <string>
+#include <vector>
 #include "gdoor.h"
+#include "gdoor_bus_listener.h"
 
 namespace esphome {
 namespace gdoor_esphome {
@@ -21,6 +23,12 @@ class GdoorComponent : public Component {
   void dump_config() override;
 
   void send_bus_message(const std::string &payload);
+
+  // Push-model registration — called from each sub-component's setup() or Python codegen
+  void register_bus_listener(GDoorBusListener *l) { bus_listeners_.push_back(l); }
+
+  // Push busdata_hex to all registered listeners (binary sensors and event entities)
+  void push_bus_data(const std::string &busdata_hex);
 
   void set_last_rx_data(GDOOR_DATA *data);
 
@@ -45,6 +53,7 @@ class GdoorComponent : public Component {
   GDOOR_DATA* last_rx_data_{nullptr};
   std::string last_rx_str_;
   uint32_t last_bus_update_{0};
+  std::vector<GDoorBusListener *> bus_listeners_;
 };
 
 class PrintToBuffer : public Print {

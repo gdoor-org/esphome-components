@@ -10,11 +10,14 @@ DEPENDENCIES = [DOMAIN]
 
 CONF_REQUIRE_RESPONSE = "require_response"
 CONF_PAYLOAD = "payload"
+CONF_TX_EVENT_ID = "tx_event_id"
+CONF_TX_EVENT_TYPE = "tx_event_type"
 HEX_STRING_REGEX = re.compile(r"^[0-9A-Fa-f]+$")  # Regex to validate hex string
 
 
-# Define the text sensor class for gdoor
 GDoorBusWrite = gdoor_esphome_ns.class_("GDoorBusWrite", output.BinaryOutput, cg.Component)
+# Reference only — avoids circular import; full class is defined in event/__init__.py
+GDoorBusEvent = gdoor_esphome_ns.class_("GDoorBusEvent")
 
 def calculate_crc(hex_string):
     """Calculate the CRC checksum of a given hex string."""
@@ -51,6 +54,8 @@ CONFIG_SCHEMA = output.BINARY_OUTPUT_SCHEMA.extend({
         validate_payload_with_crc
     ),
     cv.Optional(CONF_REQUIRE_RESPONSE, default=False): cv.boolean,
+    cv.Optional(CONF_TX_EVENT_ID): cv.use_id(GDoorBusEvent),
+    cv.Optional(CONF_TX_EVENT_TYPE, default="press"): cv.string_strict,
 }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
@@ -61,3 +66,7 @@ async def to_code(config):
     cg.add(var.set_parent(parent))
     cg.add(var.set_payload(config[CONF_PAYLOAD]))
     cg.add(var.set_require_response(config[CONF_REQUIRE_RESPONSE]))
+    if CONF_TX_EVENT_ID in config:
+        tx_event = await cg.get_variable(config[CONF_TX_EVENT_ID])
+        cg.add(var.set_tx_event(tx_event))
+        cg.add(var.set_tx_event_type(config[CONF_TX_EVENT_TYPE]))

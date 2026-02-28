@@ -24,6 +24,48 @@ gdoor:
   rx_thresh_pin: 26 # optional (default 26)
   rx_sens: 'med'    # optional if rx_pin is 22: 'low', 'med' or 'high' (default 'high')
 
+event:
+  # Doorbell ring event — distinguishes short and long ring
+  - platform: gdoor
+    id: gdoor_ring_event
+    name: "GDoor Ring"
+    device_class: doorbell
+    gdoor_id: my_gdoor
+    busdata:
+      ring_short:
+        - "011011A286FD0360A04A"   # short BUTTON_RING on OUTDOOR station
+      ring_long:
+        - "011011A286FD03A0A08A"   # long BUTTON_RING on OUTDOOR station
+
+  # Indoor light button event
+  - platform: gdoor
+    id: gdoor_light_event
+    name: "GDoor Light Button"
+    device_class: button
+    gdoor_id: my_gdoor
+    busdata:
+      press:
+        - "011041A286FD0000A18FA7" # BUTTON_LIGHT from INDOOR station
+
+  # TX-linked event: fires when the output sends the DOOR_OPEN payload.
+  # No busdata needed — RX is disabled while transmitting, so we fire from TX side.
+  - platform: gdoor
+    id: gdoor_opener_event
+    name: "GDoor Opener"
+    device_class: button
+    gdoor_id: my_gdoor
+    event_types:
+      - press                       # explicit list required when no busdata is provided
+
+output:
+  - platform: gdoor
+    id: gdoor_outdoor_opener
+    name: "GDoor Outdoor Opener"
+    gdoor_id: my_gdoor
+    payload: "0200311234560000A165432139"   # example DOOR_OPEN to OUTDOOR station
+    tx_event_id: gdoor_opener_event         # optional: fire this event when output triggers
+    tx_event_type: press                    # optional: event_type to fire (default: "press")
+
 text_sensor:        # atm returns gdoor formatted strings like: {"action": "BUTTON_RING", "parameters": "0360", "source": "A286FD", "destination": "000000", "type": "OUTDOOR", "busdata": "011011A286FD0360A04A"}
  -  platform: gdoor
     id: gdoor_bus_message
@@ -52,14 +94,6 @@ binary_sensor:
     name: "GDoor Button Light"
     gdoor_id: my_gdoor
     busdata: "011041A286FD0000A18FA7"         # example filter a BUTTON_LIGHT from INDOOR station
-
-output:
-  - platform: gdoor
-    id: gdoor_outdoor_opener
-    name: "GDoor Outdoor Opener"
-    gdoor_id: my_gdoor
-    # Attention: CRC check will be performed on hex-string during config validation. Only valid payloads are allowed.
-    payload: "0200311234560000A165432139"    # example of DOOR_OPEN to open a OUTDOOR .
 
 button:
   - platform: output

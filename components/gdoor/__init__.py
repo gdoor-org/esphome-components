@@ -1,8 +1,57 @@
+import re
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
 from esphome.const import CONF_ID
 from esphome.components.esp32 import include_builtin_idf_component
+
+# ---------------------------------------------------------------------------
+# Shared busdata payload validator — used by binary_sensor and event platforms.
+# Validates a received Gira bus frame hex string (full frame including CRC).
+# ---------------------------------------------------------------------------
+_HEX_RE = re.compile(r'^[0-9A-Fa-f]+$')
+
+
+def _crc_of(hex_string):
+    """8-bit sum of all bytes mod 256, returned as two uppercase hex chars."""
+    total = sum(int(hex_string[i:i + 2], 16) for i in range(0, len(hex_string), 2))
+    return f"{total & 0xFF:02X}"
+
+
+def validate_gdoor_busdata(value):
+    """
+    Validate a single received Gira bus frame hex string (including CRC as last byte).
+    Checks: hex chars only, even length, minimum frame length, correct CRC.
+    Normalises to uppercase.
+    """
+    value = cv.string_strict(value).strip().upper()
+    if not value:
+        raise cv.Invalid("busdata payload must not be empty")
+    if not _HEX_RE.match(value):
+        raise cv.Invalid(
+            f"busdata must contain only hex characters (0-9, A-F): '{value}'"
+        )
+    if len(value) % 2 != 0:
+        raise cv.Invalid(
+            f"busdata must have even length (hex pairs), got {len(value)} chars: '{value}'"
+        )
+    if len(value) < 18:   # 9 bytes minimum — matches parser's data->len >= 9 check
+        raise cv.Invalid(
+            f"busdata too short for a valid Gira bus frame "
+            f"(minimum 18 hex chars = 9 bytes, got {len(value)}): '{value}'"
+        )
+    data_hex = value[:-2]
+    given_crc = value[-2:]
+    expect_crc = _crc_of(data_hex)
+    if given_crc != expect_crc:
+        raise cv.Invalid(
+            f"CRC mismatch in busdata: last byte is {given_crc}, "
+            f"expected {expect_crc} (payload: {value})"
+        )
+    return value   # normalised uppercase
+
+
+GDOOR_BUSDATA_VALIDATOR = validate_gdoor_busdata
 
 CODEOWNERS = ["@dtill"]
 DOMAIN = "gdoor"

@@ -62,6 +62,22 @@ void GdoorComponent::setup() {
 }
 
 
+// Build uppercase hex string from raw frame bytes — O(n), called once per frame
+static std::string build_busdata_hex(const GDOOR_DATA *data) {
+  static const char HC[] = "0123456789ABCDEF";
+  std::string s;
+  s.reserve((size_t)data->len * 2);
+  for (uint16_t i = 0; i < data->len; i++) {
+    s += HC[(data->data[i] >> 4) & 0xF];
+    s += HC[ data->data[i]       & 0xF];
+  }
+  return s;
+}
+
+void GdoorComponent::push_bus_data(const std::string &busdata_hex) {
+  for (auto *l : bus_listeners_) l->on_bus_message(busdata_hex);
+}
+
 void GdoorComponent::loop() {
   GDOOR::loop();
   GDOOR_DATA* rx_data = GDOOR::read();
@@ -75,6 +91,11 @@ void GdoorComponent::loop() {
     this->last_rx_str_ = "{" + std::string(buffer) + "}";
     this->set_last_bus_update( millis() );
     ESP_LOGD(TAG, "Received data from GDoor bus: %s", buffer);
+
+    // Push busdata_hex to all registered sensors and events (valid frames only)
+    if (rx_data->valid) {
+      push_bus_data(build_busdata_hex(rx_data));
+    }
   }
 }
 
