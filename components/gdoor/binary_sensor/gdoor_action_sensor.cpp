@@ -1,4 +1,5 @@
 #include "esphome/core/log.h"
+#include "esphome/core/hal.h"
 #include "gdoor_action_sensor.h"
 
 namespace esphome {

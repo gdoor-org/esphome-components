@@ -15,7 +15,7 @@ class GdoorComponent : public Component {
   void set_rx_pin(GPIOPin *rx_pin);
   void set_rx_thresh_pin(GPIOPin *rx_thresh_pin);
   void set_rx_sens(float rx_sens);
-
+  float get_setup_priority() const override { return esphome::setup_priority::LATE; }
   void setup() override;
   void loop() override;
   void dump_config() override;

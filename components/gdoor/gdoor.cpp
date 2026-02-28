@@ -16,6 +16,7 @@
  */
 #include "gdoor.h"
 #include "esphome/core/log.h"
+#include "driver/dac_oneshot.h"
 
 using esphome::esp_log_printf_;
 
@@ -39,6 +40,7 @@ namespace GDOOR {
     */
     void loop() {
         GDOOR_RX::loop();
+        GDOOR_TX::loop();
     }
 
     /**
@@ -62,9 +64,8 @@ namespace GDOOR {
     * Send out data.
     * @param hex string data without 0x prefix
     */
-    void send(String str) {
+    void send(const char *str) {
         GDOOR_TX::send(str);
-
     }
 
     /*
@@ -72,14 +73,20 @@ namespace GDOOR {
     * @return true: GDOOR RX or TX is active. False: no GDOOR activity.
     */
     bool active() {
-        return (GDOOR_TX::tx_state != 0 || GDOOR_RX::rx_state != 0);
+        return (GDOOR_TX::busy() || GDOOR_RX::rx_state != 0);
     }
 
     /** Set RX Threshold (Sensitivity) to a certain level,
      * only working for IO22 rx input on v3.1 hardware
     */
    void setRxThreshold(uint8_t pin, float sensitivity) {
-        uint8_t value =  (uint8_t)((sensitivity/3.3)*255);
-        dacWrite(pin, value);
+        uint8_t value = (uint8_t)((sensitivity / 3.3f) * 255);
+        // GPIO25 = DAC_CHAN_0, GPIO26 = DAC_CHAN_1 (IDF v5 dac_oneshot API)
+        dac_channel_t chan = (pin == 25) ? DAC_CHAN_0 : DAC_CHAN_1;
+        dac_oneshot_handle_t handle;
+        dac_oneshot_config_t cfg = { .chan_id = chan };
+        dac_oneshot_new_channel(&cfg, &handle);
+        dac_oneshot_output_voltage(handle, value);
+        // handle intentionally not deleted — DAC output must remain active
    }
 }

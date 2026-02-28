@@ -1,17 +1,19 @@
 esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 external_components:
   - source:
       type: git
-      url: https://github.com/gdoor-org/esphome-components
+      url: https://github.com/dtill/esphome-components
     components: [gdoor]
     refresh: 0s
 
 # Enable Home Assistant API
 api:
   reboot_timeout: 0s
-encryption:
+  encryption:
     key: !secret my_own_secret_api_key # api-key generator found here: https://esphome.io/components/api.html#configuration-variables
 
 gdoor:

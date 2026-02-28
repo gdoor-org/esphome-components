@@ -22,17 +22,18 @@
 #define MAX_WORDLEN 25
 
 // RX Statemachine
-#define FLAG_RX_ACTIVE 0x01
-#define FLAG_BITSTREAM_RECEIVED 0x02
-#define FLAG_BITSTREAM_CONVERTED 0x04
-#define FLAG_DATA_READY 0x08
+#define FLAG_RX_ACTIVE           0x01
+#define FLAG_BITSTREAM_RECEIVED  0x02
+#define FLAG_DATA_READY          0x08
 
 // RX
+#define TIMER_FREQ_RX 120000
 #define BIT_ONE_DIV 2.5
 #define BIT_MIN_LEN 5
 #define STARTBIT_MIN_LEN 45
 
 // TX
+#define TIMER_FREQ_TX 60000
 #define STARTBIT_PULSENUM 66
 #define ONE_PULSENUM 16
 #define ZERO_PULSENUM 37

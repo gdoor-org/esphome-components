@@ -56,7 +56,7 @@ std::map<int, const char*>GDOOR_DATA_ACTION = {
 /**
  * Parse function, reading in the raw timer count values,
  * populating the GDOOR_DATA class elements.
- * 
+ *
  * @param counts Array with pulse counts of bits
  * @param len Number of elements in array
  * @return true if parsing was successful
@@ -117,8 +117,8 @@ bool GDOOR_DATA::parse(uint16_t *counts, uint16_t len) {
             }
 
         } //End normal bit
-    } //End for  
-    
+    } //End for
+
     if(wordcounter != 0) {
         //Check last word for crc value
         if (GDOOR_UTILS::crc(this->data, wordcounter-1) != this->data[wordcounter-1]) {
@@ -130,6 +130,7 @@ bool GDOOR_DATA::parse(uint16_t *counts, uint16_t len) {
     }
     return success;
 }
+
 
 /*
 * Constructor for GDOOR_DATA_PROTOCOL,

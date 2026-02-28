@@ -48,14 +48,4 @@ namespace GDOOR_UTILS {
         return r;
     }
 
-    uint16_t divider(uint32_t frequency) {
-        uint16_t divider = 0;
-        if (frequency > 0) {
-            divider = (uint16_t)(APB_CLK_FREQ / frequency);
-        }
-        if (divider < 2 || divider > 65535) {
-            divider = 0;
-        }
-        return divider;
-    }
 }

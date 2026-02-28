@@ -2,6 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
 from esphome.const import CONF_ID
+from esphome.components.esp32 import include_builtin_idf_component
 
 CODEOWNERS = ["@dtill"]
 DOMAIN = "gdoor"
@@ -62,6 +63,7 @@ CONFIG_SCHEMA = cv.All(
 )
 
 async def to_code(config):
+    include_builtin_idf_component("esp_driver_dac")
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     tx_pin = await cg.gpio_pin_expression(config[CONF_TX_PIN])

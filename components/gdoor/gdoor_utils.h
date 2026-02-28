@@ -16,11 +16,19 @@
  */
 #ifndef GDOOR_UTILS_H
 #define GDOOR_UTILS_H
-#include <Arduino.h>
+#include "gdoor_print.h"
 
 namespace GDOOR_UTILS {
     uint8_t crc(uint8_t *words, uint16_t len);
     uint8_t parity_odd(uint8_t word);
+
+    // Print an integer as uppercase hex without leading zeros.
+    static inline size_t _print_hex_upper(Print& p, uint32_t v) {
+        static const char HC[] = "0123456789ABCDEF";
+        char buf[9]; buf[8] = '\0'; int i = 8;
+        do { buf[--i] = HC[v & 0xF]; v >>= 4; } while (v);
+        return p.print(&buf[i]);
+    }
 
     uint16_t divider(uint32_t frequency);
 
@@ -37,7 +45,7 @@ namespace GDOOR_UTILS {
         r+= p.print("\": [");
         for(uint16_t i=0; i<len; i++) {
             r+= p.print("\"0x");
-            r+= p.print(data[i], HEX);
+            r+= _print_hex_upper(p, (uint32_t)data[i]);
             if (i==len-1) {
                 r+= p.print("\"");
             } else {
@@ -67,7 +75,7 @@ namespace GDOOR_UTILS {
             if(data[i] < 16) {
                 r+= p.print("0");
             }
-            r+= p.print(data[i], HEX);
+            r+= _print_hex_upper(p, (uint32_t)data[i]);
         }
         r+= p.print("\"");
         return r;
