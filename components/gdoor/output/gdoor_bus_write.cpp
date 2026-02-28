@@ -8,14 +8,14 @@ static const char *TAG = "gdoor_esphome.bus_write";
 
 void GDoorBusWrite::write_state(bool state) {
   if (!state) {
-    ESP_LOGD(TAG, "Writing state: OFF");
+    ESP_LOGV(TAG, "Writing state: OFF");
     return;
   }
   if (this->parent_ == nullptr) {
     ESP_LOGW(TAG, "Parent component is not set, cannot write to GDoor bus");
     return;
   }
-  ESP_LOGD(TAG, "Writing state: ON");
+  ESP_LOGV(TAG, "Writing state: ON");
   ESP_LOGD(TAG, "  Sending payload: %s", this->payload_.c_str());
   this->parent_->send_bus_message(this->payload_);
 }

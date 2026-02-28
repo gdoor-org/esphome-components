@@ -253,7 +253,7 @@ namespace GDOOR_TX {
         // via startbit_send, matching the original gdoor-alt design.
         bits_len = (uint16_t)((len + 1) * 9);
 
-        ESP_LOGD(TAG, "TX send: %u bytes + CRC, bits_len=%u", len, bits_len);
+        ESP_LOGV(TAG, "TX send: %u bytes + CRC 0x%02X, bits_len=%u", len, (unsigned)crc, bits_len);
         start_timer();
     }
 
@@ -292,7 +292,7 @@ namespace GDOOR_TX {
             // enable() clears state + disables pending timer alarms + re-attaches interrupt.
             // Discards any stale RX data that was captured from our own TX signal.
             GDOOR_RX::enable();
-            ESP_LOGD(TAG, "TX done, RX re-enabled");
+            ESP_LOGV(TAG, "TX done, RX re-enabled");
         }
     }
 
