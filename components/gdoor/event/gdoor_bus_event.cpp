@@ -29,8 +29,9 @@ void GDoorBusEvent::setup() {
 
 void GDoorBusEvent::dump_config() {
   ESP_LOGCONFIG(TAG, "GDoor Bus Event '%s':", this->get_name().c_str());
-  const auto &dc = this->get_device_class_ref();
-  ESP_LOGCONFIG(TAG, "  Device class: %s", dc.empty() ? "(none)" : dc.c_str());
+  char dc_buf[MAX_DEVICE_CLASS_LENGTH];
+  const char *dc = this->get_device_class_to(dc_buf);
+  ESP_LOGCONFIG(TAG, "  Device class: %s", dc[0] == '\0' ? "(none)" : dc);
   if (busdata_.empty()) {
     ESP_LOGCONFIG(TAG, "  Busdata filters: none (TX-only event)");
   } else {
