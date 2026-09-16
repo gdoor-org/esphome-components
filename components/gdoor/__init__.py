@@ -113,6 +113,8 @@ CONFIG_SCHEMA = cv.All(
 
 async def to_code(config):
     include_builtin_idf_component("esp_driver_dac")
+    include_builtin_idf_component("esp_driver_gptimer")
+    include_builtin_idf_component("esp_driver_ledc")
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     tx_pin = await cg.gpio_pin_expression(config[CONF_TX_PIN])
