@@ -17,6 +17,8 @@
 
 #include "gdoor_bus_event.h"
 #include "esphome/core/log.h"
+#include "esphome/core/macros.h"
+#include "esphome/core/version.h"
 
 namespace esphome {
 namespace gdoor_esphome {
@@ -28,7 +30,12 @@ void GDoorBusEvent::setup() {
 }
 
 void GDoorBusEvent::dump_config() {
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 11, 0)
+  // get_name() deprecated in 2026.11, removed in 2027.5
+  ESP_LOGCONFIG(TAG, "GDoor Bus Event '%s':", LOG_STR_ARG(this->get_log_name()));
+#else
   ESP_LOGCONFIG(TAG, "GDoor Bus Event '%s':", this->get_name().c_str());
+#endif
   char dc_buf[MAX_DEVICE_CLASS_LENGTH];
   const char *dc = this->get_device_class_to(dc_buf);
   ESP_LOGCONFIG(TAG, "  Device class: %s", dc[0] == '\0' ? "(none)" : dc);
